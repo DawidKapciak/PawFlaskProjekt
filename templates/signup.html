@@ -13,17 +13,16 @@
         <p>
             <label>
                 Hasło:
-                <input type="password" name="password">
+                <input type="password" name="password" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{6,30}$">
             </label>
         </p>
         <p>
             <label>
                 Potwierdź hasło:
-                <input type="password" name="password2">
+                <input type="password" name="password2" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{6,30}$">
             </label>
         </p>
         <input type="submit">
-        <p><a href="/">Logowanie</a></p>
     </form>
 
 {% endblock %}

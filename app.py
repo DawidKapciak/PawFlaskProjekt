@@ -18,6 +18,7 @@ firebase_config = {
     "appId": os.getenv("APP_ID")
 }
 
+
 firebase = pyrebase.initialize_app(firebase_config)
 auth = firebase.auth()
 
@@ -26,19 +27,28 @@ app.secret_key = os.getenv("SECRET_KEY")
 
 @app.route('/', methods=['POST', 'GET'])
 def login():
-    # auth.create_user_with_email_and_password('test@gmail.com', 'password')
 
-    if('user' in session):
-        return render_template('index.html')
     if request.method == "POST":
         email = request.form.get('email')
         password = request.form.get('password')
         try:
             user = auth.sign_in_with_email_and_password(email, password)
-            session['user'] = email
+            acc_info = auth.get_account_info(user['idToken'])
+            if acc_info['users'][0]['emailVerified']:
+                session['user'] = email
+            else:
+                auth.send_email_verification(user['idToken'])
+                flash("Zweryfikuj swoje konto email")
+
         except Exception as e:
-            if "EMAIL_NOT_FOUND" in str(e):
+            print(e)
+            if "TOO_MANY_ATTEMPTS_TRY_LATER" in str(e):
+                flash("Zbyt dużo prób, spróbuj ponownie później")
+            elif "EMAIL_NOT_FOUND" or "INVALID_PASSWORD" or "INVALID_EMAIL" in str(e):
                 flash("Podałeś błędne hasło lub takie konto z takim adresem email nie istnieje")
+
+    if 'user' in session:
+        return render_template('index.html', email=session.get('user'))
 
     return render_template('login.html')
 
@@ -59,7 +69,6 @@ def signup():
         if password == password2:
             try:
                 user = auth.create_user_with_email_and_password(email, password)
-                session['user'] = email
                 auth.send_email_verification(user['idToken'])
                 flash("Utworzono konto")
             except Exception as e:
