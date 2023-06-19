@@ -3,17 +3,16 @@
 {% block content %}
 
     <form action="/" method="POST">
-        <p>
-            <label>
-                Email:<input type="text" name="email">
-            </label>
-        </p>
-        <p>
-            <label>
-                Hasło:<input type="password" name="password">
-            </label>
-        </p>
-        <input type="submit">
+        <div class="mb-3">
+            <label for="InputEmail" class="form-label">Adres email</label>
+            <input type="email" name="email" class="form-control" id="InputEmail" aria-describedby="emailHelp">
+            <div id="emailHelp" class="form-text">Nigdy nie udostępnimy twojego adresu email.</div>
+        </div>
+        <div class="mb-3">
+            <label for="InputPassword" class="form-label">Hasło</label>
+            <input type="password" name="password" class="form-control" id="InputPassword">
+        </div>
+        <input type="submit" value="Zaloguj" class="btn btn-dark">
         <p><a href="/forgot">Zapomniałem hasła</a></p>
     </form>
 

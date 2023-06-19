@@ -4,25 +4,20 @@
 {% block content %}
 
     <form action="/signup" method="POST">
-        <p>
-            <label>
-                Email:
-                <input type="text" name="email">
-            </label>
-        </p>
-        <p>
-            <label>
-                Hasło:
-                <input type="password" name="password" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{6,30}$">
-            </label>
-        </p>
-        <p>
-            <label>
-                Potwierdź hasło:
-                <input type="password" name="password2" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{6,30}$">
-            </label>
-        </p>
-        <input type="submit">
+        <div class="mb-3">
+            <label for="InputEmail" class="form-label">Adres Email</label>
+            <input type="email" name="email" class="form-control" id="InputEmail" aria-describedby="emailHelp">
+            <div id="emailHelp" class="form-text">Nigdy nie udostępnimy twojego adresu email.</div>
+        </div>
+        <div class="mb-3">
+            <label for="InputPassword" class="form-label">Hasło</label>
+            <input type="password" name="password" class="form-control" id="InputPassword" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{6,30}$">
+        </div>
+        <div class="mb-3">
+            <label for="InputPassword2" class="form-label">Powtórz hasło</label>
+            <input type="password" name="password2" class="form-control" id="InputPassword2" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{6,30}$">
+        </div>
+        <input type="submit" value="Zarejestruj" class="btn btn-dark">
     </form>
 
 {% endblock %}

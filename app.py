@@ -38,14 +38,13 @@ def login():
                 session['user'] = email
             else:
                 auth.send_email_verification(user['idToken'])
-                flash("Zweryfikuj swoje konto email")
+                flash("Zweryfikuj swoje konto email.")
 
         except Exception as e:
-            print(e)
             if "TOO_MANY_ATTEMPTS_TRY_LATER" in str(e):
-                flash("Zbyt dużo prób, spróbuj ponownie później")
+                flash("Zbyt dużo prób, spróbuj ponownie później.")
             elif "EMAIL_NOT_FOUND" or "INVALID_PASSWORD" or "INVALID_EMAIL" in str(e):
-                flash("Podałeś błędne hasło lub takie konto z takim adresem email nie istnieje")
+                flash("Podałeś błędne hasło lub takie konto z takim adresem email nie istnieje.")
 
     if 'user' in session:
         return render_template('index.html', email=session.get('user'))
@@ -70,10 +69,11 @@ def signup():
             try:
                 user = auth.create_user_with_email_and_password(email, password)
                 auth.send_email_verification(user['idToken'])
-                flash("Utworzono konto")
+                flash("Utworzono konto, potwierdź je na mailu.")
+                return render_template('login.html')
             except Exception as e:
                 if "EMAIL_EXISTS" in str(e):
-                    flash("Konto z takim adresem email już istnieje")
+                    flash("Konto z takim adresem email już istnieje.")
         else:
             flash("Hasła nie są takie same!")
     return render_template('signup.html')
@@ -85,10 +85,10 @@ def forgot():
         try:
             email = request.form.get('email')
             auth.send_password_reset_email(email)
-            flash("Na email zostały wysłane dalsze instrukcje")
+            flash("Na email zostały wysłane dalsze instrukcje.")
         except Exception as e:
             if "EMAIL_NOT_FOUND" in str(e):
-                flash("Nie istnieje konto z takim adresem email")
+                flash("Nie istnieje konto z takim adresem email.")
 
     return render_template('forgot.html')
 
