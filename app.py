@@ -2,9 +2,6 @@ from flask import Flask, session, render_template, request, redirect, flash
 import pyrebase
 import os
 
-# import mysql.connector
-# import PySimpleGUI as sg
-# from screeninfo import get_monitors
 from dotenv import load_dotenv
 
 load_dotenv()

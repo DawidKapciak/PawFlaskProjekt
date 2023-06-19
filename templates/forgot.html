@@ -2,26 +2,16 @@
 
 {% block content %}
 
-    {% for message in get_flashed_messages() %}
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    {% endfor %}
-    <!DOCTYPE html>
-    <html lang="pl">
-    <head>
-        <meta charset="UTF-8">
-        <title>Notatnik - Rejestracja</title>
-    </head>
-    <body>
-        <form action="/forgot" method="POST">
-            <p>Wprowadź mail, do którego zapomniałeś hasła</p>
-            <p>Email: <input type="text" name="email"></p>
-            <input type="submit">
-            <p><a href="/">Logowanie</a></p>
-        </form>
-    </body>
-    </html>
+    <form action="/forgot" method="POST">
+        <p>Wprowadź mail, do którego zapomniałeś hasła</p>
+        <p>
+            <label>
+                Email:
+                <input type="text" name="email">
+            </label>
+        </p>
+        <input type="submit">
+        <p><a href="/">Logowanie</a></p>
+    </form>
 
 {% endblock %}

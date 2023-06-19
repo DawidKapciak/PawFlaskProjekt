@@ -10,6 +10,16 @@
   {% include 'navbar.html' %}
     <div class="container">
         <br />
+        {% for message in get_flashed_messages() %}
+            {% if message == "Utworzono konto" %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {% else %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {% endif %}
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
         {% block content %}
         {% endblock %}
     </div>
