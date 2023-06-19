@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <!DOCTYPE html>
+    <html lang="pl">
+    <head>
+        <meta charset="UTF-8">
+        <title>Notatnik - Logowanie</title>
+    </head>
+    <body>
+
+            {% for message in get_flashed_messages() %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+
+        <form action="/" method="POST">
+            <p>Email: <input type="text" name="email"></p>
+            <p>Hasło: <input type="password" name="password"></p>
+            <input type="submit">
+            <p><a href="/forgot">Zapomniałem hasła</a></p>
+        </form>
+    </body>
+    </html>
+
+{% endblock %}
