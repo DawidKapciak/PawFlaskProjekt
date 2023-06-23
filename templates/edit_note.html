@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	<h1>Edytuj notatkę</h1>
+    <div class="shadow p-3 mb-5 bg-body rounded">
+        <form action="/edit/{{ note_to_update.id }}" method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+                {{ form.title.label(class="form-label") }}
+                {{ form.title(class="form-control", value=note_to_update.title) }}
+            </div>
+            <div class="mb-3">
+                {{ form.text.label(class="form-label") }}
+                {{ form.text(class="form-control", value=note_to_update.text) }}
+            </div>
+            <div class="mb-3">
+                {{ form.category.label(class="form-label") }}
+                {{ form.category(class="form-control", value=note_to_update.category) }}
+            </div>
+
+            <div class="mb-3">
+                {{ form.save(class="btn btn-dark") }}
+            </div>
+
+        </form>
+    </div>
+{% endblock %}

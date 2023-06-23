@@ -1,19 +1,30 @@
 {% extends 'base.html' %}
 
 {% block content %}
+    <h1>Zaloguj się</h1>
+    <div class="shadow p-3 mb-5 bg-body rounded">
+        <form action="/" method="POST">
+            {{ form.hidden_tag() }}
 
-    <form action="/" method="POST">
-        <div class="mb-3">
-            <label for="InputEmail" class="form-label">Adres email</label>
-            <input type="email" name="email" class="form-control" id="InputEmail" aria-describedby="emailHelp">
-            <div id="emailHelp" class="form-text">Nigdy nie udostępnimy twojego adresu email.</div>
-        </div>
-        <div class="mb-3">
-            <label for="InputPassword" class="form-label">Hasło</label>
-            <input type="password" name="password" class="form-control" id="InputPassword">
-        </div>
-        <input type="submit" value="Zaloguj" class="btn btn-dark">
-        <p><a href="/forgot">Zapomniałem hasła</a></p>
-    </form>
+            <div class="mb-3">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control") }}
+                <div id="emailHelp" class="form-text">Nigdy nie udostępnimy twojego adresu email.</div>
+            </div>
+            <div class="mb-3">
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control") }}
+            </div>
+
+            <div class="mb-3">
+                {{ form.login(class="btn btn-dark") }}
+            </div>
+            <p>
+                <a href="/forgot">Zapomniałem hasła</a>
+            </p>
+        </form>
+    </div>
+
+
 
 {% endblock %}

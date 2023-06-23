@@ -1,12 +1,15 @@
-from flask import Flask, session, render_template, request, redirect, flash
-import pyrebase
 import os
+from datetime import datetime
 
+import pyrebase
 from dotenv import load_dotenv
+from flask import Flask, session, render_template, request, redirect, flash
+from flask_sqlalchemy import SQLAlchemy
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField, PasswordField, EmailField
+from wtforms.validators import DataRequired, Email
 
 load_dotenv()
-
-app = Flask(__name__)
 
 firebase_config = {
     "apiKey": os.getenv("API_KEY"),
@@ -18,38 +21,152 @@ firebase_config = {
     "appId": os.getenv("APP_ID")
 }
 
-
 firebase = pyrebase.initialize_app(firebase_config)
 auth = firebase.auth()
 
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///paw.db'
 app.secret_key = os.getenv("SECRET_KEY")
 
+db = SQLAlchemy(app)
 
+
+class LoginForm(FlaskForm):
+    email = EmailField('Adres email ', validators=[DataRequired(), Email()])
+    password = PasswordField('Hasło ', validators=[DataRequired()])
+    login = SubmitField('Zaloguj')
+
+
+class RegisterForm(FlaskForm):
+    email = EmailField('Adres email ', validators=[DataRequired(), Email()])
+    password = PasswordField('Hasło ', validators=[DataRequired()])
+    password2 = PasswordField('Hasło ', validators=[DataRequired()])
+    register = SubmitField('Zarejestruj')
+
+
+class ForgotForm(FlaskForm):
+    email = EmailField('Adres email ', validators=[DataRequired(), Email()])
+    send = SubmitField('Wyślij')
+
+
+class Notes(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    title = db.Column(db.String(50), nullable=False)
+    text = db.Column(db.String(200), nullable=False)
+    category_id = db.Column(db.Integer)
+    date_added = db.Column(db.DateTime, default=datetime.utcnow)
+    date_updated = db.Column(db.DateTime)
+    date_ending = db.Column(db.DateTime)
+    sharing_id = db.Column(db.Integer, nullable=True)
+
+
+class NoteForm(FlaskForm):
+    title = StringField("Tytuł notatki", validators=[DataRequired()])
+    text = StringField("Treść notatki", validators=[DataRequired()])
+    category = StringField("Kategoria")
+    save = SubmitField("Zapisz")
+
+
+@app.route('/add', methods=['GET', 'POST'])
+def add_note():
+    form = NoteForm()
+    our_notes = Notes.query.order_by(Notes.date_added)
+    if form.validate_on_submit():
+        note = Notes(user_id=2, title=form.title.data, text=form.text.data, category_id=0)
+        try:
+            db.session.add(note)
+            db.session.commit()
+            form.title.data = ''
+            form.text.data = ''
+            flash("Dodano notatkę!")
+            return render_template("index.html", our_notes=our_notes)
+        except Exception as e:
+            print(e)
+            flash("Wystąpił błąd")
+    return render_template("add_note.html",
+                           form=form)
+
+
+@app.route('/edit/<int:id>', methods=['GET', 'POST'])
+def edit_note(id):
+    form = NoteForm()
+    our_notes = Notes.query.order_by(Notes.date_added)
+    note_to_update = Notes.query.get_or_404(id)
+    if request.method == "POST":
+        note_to_update.title = request.form['title']
+        note_to_update.text = request.form['text']
+        note_to_update.category = request.form['category']
+        try:
+            db.session.commit()
+            flash("Zmodyfikowano notatkę.")
+            return render_template("index.html",
+                                   our_notes=our_notes)
+        except Exception as e:
+            print(e)
+            flash("Wystąpił błąd")
+    else:
+        return render_template("edit_note.html",
+                               form=form,
+                               note_to_update=note_to_update)
+
+
+@app.route('/delete/<int:id>', methods=['GET', 'POST'])
+def delete_note(id):
+    our_notes = Notes.query.order_by(Notes.date_added)
+    note_to_delete = Notes.query.get_or_404(id)
+    try:
+        db.session.delete(note_to_delete)
+        db.session.commit()
+        flash("Usunięto notatkę")
+    except Exception as e:
+        print(e)
+        flash("Wystąpił błąd")
+    finally:
+        return render_template("index.html",
+                               our_notes=our_notes)
+
+
+def create_name(email):
+    index = email.find('@')
+    name = email
+    # Sprawdź, czy znaleziono znak '@'
+    if index != -1:
+        # Usuń wszystko, co jest po znaku '@'
+        name = email[:index]
+    return name
+
+
+# Create a route decorator
 @app.route('/', methods=['POST', 'GET'])
 def login():
-
-    if request.method == "POST":
-        email = request.form.get('email')
-        password = request.form.get('password')
+    email = None
+    password = None
+    our_notes = Notes.query.order_by(Notes.date_added)
+    form = LoginForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
         try:
             user = auth.sign_in_with_email_and_password(email, password)
             acc_info = auth.get_account_info(user['idToken'])
             if acc_info['users'][0]['emailVerified']:
                 session['user'] = email
+                session['name'] = create_name(email)
             else:
-                auth.send_email_verification(user['idToken'])
                 flash("Zweryfikuj swoje konto email.")
 
         except Exception as e:
+            print(e)
             if "TOO_MANY_ATTEMPTS_TRY_LATER" in str(e):
                 flash("Zbyt dużo prób, spróbuj ponownie później.")
             elif "EMAIL_NOT_FOUND" or "INVALID_PASSWORD" or "INVALID_EMAIL" in str(e):
                 flash("Podałeś błędne hasło lub takie konto z takim adresem email nie istnieje.")
 
     if 'user' in session:
-        return render_template('index.html', email=session.get('user'))
+        return render_template('index.html', our_notes=our_notes)
 
-    return render_template('login.html')
+    return render_template('login.html', email=email, password=password, form=form)
 
 
 @app.route('/logout')
@@ -61,10 +178,13 @@ def logout():
 
 @app.route('/signup', methods=['POST', 'GET'])
 def signup():
-    if request.method == "POST":
-        email = request.form.get('email')
-        password = request.form.get('password')
-        password2 = request.form.get('password2')
+    email = None
+    password = None
+    form = RegisterForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
+        password2 = form.password2.data
         if password == password2:
             try:
                 user = auth.create_user_with_email_and_password(email, password)
@@ -76,21 +196,23 @@ def signup():
                     flash("Konto z takim adresem email już istnieje.")
         else:
             flash("Hasła nie są takie same!")
-    return render_template('signup.html')
+    return render_template('signup.html', email=email, password=password, form=form)
 
 
 @app.route('/forgot', methods=['POST', 'GET'])
 def forgot():
-    if request.method == "POST":
+    email = None
+    form = ForgotForm()
+    if form.validate_on_submit():
+        email = form.email.data
         try:
-            email = request.form.get('email')
             auth.send_password_reset_email(email)
             flash("Na email zostały wysłane dalsze instrukcje.")
         except Exception as e:
             if "EMAIL_NOT_FOUND" in str(e):
                 flash("Nie istnieje konto z takim adresem email.")
 
-    return render_template('forgot.html')
+    return render_template('forgot.html', email=email, form=form)
 
 
 if __name__ == '__main__':
