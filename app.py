@@ -2,12 +2,16 @@ import os
 from datetime import datetime
 
 import pyrebase
+import requests
 from dotenv import load_dotenv
 from flask import Flask, session, render_template, request, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import StringField, SubmitField, PasswordField, EmailField
-from wtforms.validators import DataRequired, Email
+from wtforms.validators import DataRequired, Email, Length
+from werkzeug.utils import secure_filename
+
 
 load_dotenv()
 
@@ -23,10 +27,12 @@ firebase_config = {
 
 firebase = pyrebase.initialize_app(firebase_config)
 auth = firebase.auth()
+storage = firebase.storage()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///paw.db'
 app.secret_key = os.getenv("SECRET_KEY")
+app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024
 
 db = SQLAlchemy(app)
 
@@ -39,13 +45,20 @@ class LoginForm(FlaskForm):
 
 class RegisterForm(FlaskForm):
     email = EmailField('Adres email ', validators=[DataRequired(), Email()])
-    password = PasswordField('Hasło ', validators=[DataRequired()])
+    password = PasswordField('Hasło ', validators=[DataRequired(),
+                                                   Length(min=6,
+                                                          max=30)])
     password2 = PasswordField('Hasło ', validators=[DataRequired()])
     register = SubmitField('Zarejestruj')
 
 
 class ForgotForm(FlaskForm):
     email = EmailField('Adres email ', validators=[DataRequired(), Email()])
+    send = SubmitField('Wyślij')
+
+
+class ProfilePicForm(FlaskForm):
+    profile_pic = FileField('Zdjęcie profilowe', validators=[FileAllowed(['jpg', 'png'], 'Tylko zdjęcia!'), FileRequired()])
     send = SubmitField('Wyślij')
 
 
@@ -118,7 +131,7 @@ def delete_note(id):
     try:
         db.session.delete(note_to_delete)
         db.session.commit()
-        flash("Usunięto notatkę")
+        flash("Usunięto notatkę!")
     except Exception as e:
         print(e)
         flash("Wystąpił błąd")
@@ -153,6 +166,13 @@ def login():
             if acc_info['users'][0]['emailVerified']:
                 session['user'] = email
                 session['name'] = create_name(email)
+                session['idToken'] = user['idToken']
+                print(storage.child(f"images/profile_pic.png").get_url(None))
+                img_url = storage.child(f"images/profile_pic_{session['user']}.jpg").get_url(None)
+                response = requests.get(img_url)
+                if response.status_code == 200:
+                    session['img_url'] = img_url
+
             else:
                 flash("Zweryfikuj swoje konto email.")
 
@@ -172,7 +192,7 @@ def login():
 @app.route('/logout')
 def logout():
     if 'user' in session:
-        session.pop('user')
+        session.clear()
     return redirect('/')
 
 
@@ -213,6 +233,27 @@ def forgot():
                 flash("Nie istnieje konto z takim adresem email.")
 
     return render_template('forgot.html', email=email, form=form)
+
+
+@app.route('/update_profile_pic', methods=['POST', 'GET'])
+def update_profile_pic():
+    form = ProfilePicForm()
+    if form.validate_on_submit():
+        try:
+            pic_data = form.profile_pic.data
+            filename = secure_filename(pic_data.filename)
+            pic_data.save(os.path.join(app.instance_path, filename))
+            keys = storage.child(f"images/profile_pic_{session['user']}.jpg").put(f"instance/{filename}", session['idToken'])
+            print(keys)
+            os.remove(f"{app.instance_path}/{filename}")
+            img_url = storage.child(f"images/profile_pic_{session['user']}.jpg").get_url(None)
+            session['img_url'] = img_url
+            flash("Dodano zdjęcie!")
+            return render_template('update_profile_pic.html', form=form)
+        except Exception as e:
+            print(e)
+            flash("Wystąpił błąd")
+    return render_template('update_profile_pic.html', form=form)
 
 
 if __name__ == '__main__':
