@@ -11,6 +11,7 @@ PROJECT_ID=YOUR_PROJECT_ID  # Your Firebase Project ID
 STORAGE_BUCKET=YOUR_STORAGE_BUCKET  # Your Firebase Storage Bucket
 MESSAGING_SENDER_ID=YOUR_MESSAGING_SENDER_ID  # Your Firebase Messaging Sender ID
 APP_ID=YOUR_APP_ID  # Your Firebase App ID
+SQLALCHEMY_DATABASE_URI=YOUR_DB_PATH # Your Database Path
 
 # Flask Configuration
 SECRET_KEY=YOUR_SECRET_KEY  # Secret key for Flask app
