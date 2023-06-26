@@ -30,7 +30,7 @@ auth = firebase.auth()
 storage = firebase.storage()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///paw.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
 app.secret_key = os.getenv("SECRET_KEY")
 app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024
 
@@ -62,7 +62,7 @@ class ProfilePicForm(FlaskForm):
     send = SubmitField('Wyślij')
 
 
-class Notes(db.Model):
+class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, nullable=False)
     title = db.Column(db.String(50), nullable=False)
@@ -84,9 +84,9 @@ class NoteForm(FlaskForm):
 @app.route('/add', methods=['GET', 'POST'])
 def add_note():
     form = NoteForm()
-    our_notes = Notes.query.order_by(Notes.date_added)
+    our_notes = Note.query.order_by(Note.date_added)
     if form.validate_on_submit():
-        note = Notes(user_id=2, title=form.title.data, text=form.text.data, category_id=0)
+        note = Note(user_id=2, title=form.title.data, text=form.text.data, category_id=0)
         try:
             db.session.add(note)
             db.session.commit()
@@ -104,8 +104,8 @@ def add_note():
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_note(id):
     form = NoteForm()
-    our_notes = Notes.query.order_by(Notes.date_added)
-    note_to_update = Notes.query.get_or_404(id)
+    our_notes = Note.query.order_by(Note.date_added)
+    note_to_update = Note.query.get_or_404(id)
     if request.method == "POST":
         note_to_update.title = request.form['title']
         note_to_update.text = request.form['text']
@@ -126,8 +126,8 @@ def edit_note(id):
 
 @app.route('/delete/<int:id>', methods=['GET', 'POST'])
 def delete_note(id):
-    our_notes = Notes.query.order_by(Notes.date_added)
-    note_to_delete = Notes.query.get_or_404(id)
+    our_notes = Note.query.order_by(Note.date_added)
+    note_to_delete = Note.query.get_or_404(id)
     try:
         db.session.delete(note_to_delete)
         db.session.commit()
@@ -155,7 +155,7 @@ def create_name(email):
 def login():
     email = None
     password = None
-    our_notes = Notes.query.order_by(Notes.date_added)
+    our_notes = Note.query.order_by(Note.date_added)
     form = LoginForm()
     if form.validate_on_submit():
         email = form.email.data
@@ -238,22 +238,60 @@ def forgot():
 @app.route('/update_profile_pic', methods=['POST', 'GET'])
 def update_profile_pic():
     form = ProfilePicForm()
+    session['img_url'] = storage.child(f"images/profile_pic_{session['user']}.jpg").get_url(None)
     if form.validate_on_submit():
         try:
             pic_data = form.profile_pic.data
             filename = secure_filename(pic_data.filename)
             pic_data.save(os.path.join(app.instance_path, filename))
-            keys = storage.child(f"images/profile_pic_{session['user']}.jpg").put(f"instance/{filename}", session['idToken'])
-            print(keys)
+            storage.child(f"images/profile_pic_{session['user']}.jpg").put(f"instance/{filename}", session['idToken'])
             os.remove(f"{app.instance_path}/{filename}")
-            img_url = storage.child(f"images/profile_pic_{session['user']}.jpg").get_url(None)
-            session['img_url'] = img_url
+            session['img_url'] = storage.child(f"images/profile_pic_{session['user']}.jpg").get_url(None)
             flash("Dodano zdjęcie!")
-            return render_template('update_profile_pic.html', form=form)
+            print(session['img_url'])
+            return render_template('update_profile_pic.html', form=form, img_url=session['img_url'])
         except Exception as e:
             print(e)
             flash("Wystąpił błąd")
+    return render_template('update_profile_pic.html', form=form, img_url=session['img_url'])
+
+
+@app.route('/download_profile_pic', methods=['POST', 'GET'])
+def download_profile_pic():
+    form = ProfilePicForm()
+    try:
+        storage.child(f"images/profile_pic_{session['user']}.jpg").download(path="", filename="static/your_profile_pic.jpg")
+        flash("Pobrano zdjęcie!")
+    except Exception as e:
+        print(e)
+        flash("Wystąpił błąd")
     return render_template('update_profile_pic.html', form=form)
+
+
+@app.route('/notes')
+def get_notes():
+    notes = Note.query.all()
+
+    output = []
+    for note in notes:
+        note_data = {
+            'id': note.id, 'user_id': note.user_id, 'title': note.title,
+            'text': note.text, 'category_id': note.category_id, 'date_added': note.date_added,
+            'date_updated': note.date_updated, 'date_ending': note.date_ending, 'sharing_id': note.sharing_id
+        }
+        output.append(note_data)
+    return {'notes': output}
+
+
+@app.route('/note/<id>')
+def get_note(id):
+    note = Note.query.get_or_404(id)
+
+    return {
+        'id': note.id, 'user_id': note.user_id, 'title': note.title,
+        'text': note.text, 'category_id': note.category_id, 'date_added': note.date_added,
+        'date_updated': note.date_updated, 'date_ending': note.date_ending, 'sharing_id': note.sharing_id
+    }
 
 
 if __name__ == '__main__':

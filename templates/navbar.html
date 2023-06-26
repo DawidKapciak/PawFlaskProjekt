@@ -20,15 +20,17 @@
                             <li><a class="dropdown-item" href="/logout">Wyloguj</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item">
-                       <img src="
-                            {% if session['img_url'] %}
-                                {{ session['img_url'] }}
-                            {% else  %}
-                                https://firebasestorage.googleapis.com/v0/b/paw-1-32b63.appspot.com/o/images%2Fprofile_pic.png?alt=media
-                            {% endif %}
-                     "
-                     alt="Zdjęcie profilowe" style="aspect-ratio: 1/1" width="30" height="30" class="rounded-circle shadow-lg">
+                    <li class="nav-item" href="/update_profile_pic">
+                        <a href="/update_profile_pic">
+                            <img src="
+                                {% if session['img_url'] %}
+                                    {{ session['img_url'] }}
+                                {% else  %}
+                                    https://firebasestorage.googleapis.com/v0/b/paw-1-32b63.appspot.com/o/images%2Fprofile_pic.png?alt=media
+                                {% endif %}
+                                     "
+                                     alt="Zdjęcie profilowe" style="aspect-ratio: 1/1" width="30" height="30" class="rounded-circle shadow-lg">
+                        </a>
                     </li>
                 {% else %}
                     <li class="nav-item">

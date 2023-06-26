@@ -23,7 +23,9 @@
             </div>
             <div class="mb-3 d-flex justify-content-around">
                 {{ form.send(class="btn btn-dark") }}
-                <button type="button" class="btn btn-dark" onclick="window.location.href='{{ url_for( 'add_note' )}}'">
+{#                <a href="{{ img_url }}" download="your_profile_pic"><span>Pobierz</span></a>#}
+{#                <a href="{{ url_for('static', filename='your_profile_pic.jpg') }}" download="your_profile_pic"><span>Pobierz</span></a>#}
+                <button type="button" class="btn btn-dark" onclick="window.location.href='{{ url_for( 'download_profile_pic' )}}'">
                     <span>Pobierz</span>
                 </button>
             </div>
