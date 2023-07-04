@@ -4,7 +4,7 @@
 {% block content %}
     <h1>Aktualizuj zdjęcie profilowe</h1>
     <div class="shadow p-3 mb-5 bg-body rounded">
-        <form action="/update_profile_pic" method="POST" enctype="multipart/form-data">
+        <form action="/settings" method="POST" enctype="multipart/form-data">
             {{ form.hidden_tag() }}
 
             <div class="mb-3">
@@ -13,9 +13,9 @@
             </div>
             <div class="d-flex justify-content-center">
                 <img src="
-                            {% if session['img_url'] %}
-                                {{ session['img_url'] }}
-                            {% else  %}
+                            {% if session['user_id'] %}
+                                https://firebasestorage.googleapis.com/v0/b/paw-1-32b63.appspot.com/o/images%2Fprofile_pic_{{ session['user_id'] }}.jpg?alt=media
+                            {% else %}
                                 https://firebasestorage.googleapis.com/v0/b/paw-1-32b63.appspot.com/o/images%2Fprofile_pic.png?alt=media
                             {% endif %}
                      "
@@ -32,4 +32,10 @@
         </form>
     </div>
 
+    <div class="shadow p-3 mb-5 bg-body rounded">
+        <h2>Pobierz swój API Key</h2>
+        <div class="mb-3 d-flex justify-content-around">
+            <input class="form-control" type="text" value="{{ api_key }}" readonly>
+        </div>
+    </div>
 {% endblock %}
