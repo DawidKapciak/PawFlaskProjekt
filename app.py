@@ -473,7 +473,9 @@ def background_thread():
 
 @app.route('/websocket')
 def websocket():
-    return render_template('websocket.html')
+    if 'user' in session:
+        return render_template('websocket.html')
+    return "Najpierw się zaloguj!"
 
 
 @socketio.on('connect')
