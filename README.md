@@ -15,3 +15,6 @@ SQLALCHEMY_DATABASE_URI=YOUR_DB_PATH # Your Database Path
 
 # Flask Configuration
 SECRET_KEY=YOUR_SECRET_KEY  # Secret key for Flask app
+
+# SQlite Configuration
+SQLALCHEMY_DATABASE_URI=sqlite:///paw.db
